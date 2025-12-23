@@ -22,16 +22,41 @@
       src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"
     ></script>
     <style>
+      :root {
+        /* Christmas theme (default) */
+        --bg1: #0f2027;
+        --bg2: #203a43;
+        --bg3: #2c5364;
+        --bg-base: #050d1a;
+        --accent: #d4af37;
+        --accent-strong: #d4af37;
+        --text-main: #fceea7;
+        --hint: rgba(212, 175, 55, 0.5);
+        --panel-border: rgba(212, 175, 55, 0.4);
+        --panel-bg: rgba(20, 20, 20, 0.6);
+      }
+      body.theme-pink {
+        --bg1: #3d1a2e;
+        --bg2: #4a2a3a;
+        --bg3: #5c3a4a;
+        --bg-base: #2a1620;
+        --accent: #f092d8;
+        --accent-strong: #f092d8;
+        --text-main: #fad5e9;
+        --hint: rgba(240, 146, 216, 0.5);
+        --panel-border: rgba(240, 146, 216, 0.4);
+        --panel-bg: rgba(20, 20, 20, 0.6);
+      }
       body {
         margin: 0;
         overflow: hidden;
         background: radial-gradient(
           circle at center,
-          #0f2027 0%,
-          #203a43 50%,
-          #2c5364 100%
+          var(--bg1) 0%,
+          var(--bg2) 50%,
+          var(--bg3) 100%
         );
-        background-color: #050d1a;
+        background-color: var(--bg-base);
         font-family: "Times New Roman", serif;
         touch-action: none;
         user-select: none;
@@ -74,7 +99,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: #2a1620;
+        background: var(--bg-base);
         z-index: 100;
         display: flex;
         flex-direction: column;
@@ -82,7 +107,7 @@
         justify-content: center;
       }
       .loader-text {
-        color: #f092d8;
+        color: var(--accent);
         font-size: 14px;
         letter-spacing: 4px;
         margin-top: 20px;
@@ -91,8 +116,8 @@
       .spinner {
         width: 40px;
         height: 40px;
-        border: 1px solid rgba(240, 146, 216, 0.2);
-        border-top: 1px solid #f092d8;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-top: 1px solid var(--accent);
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
@@ -105,17 +130,17 @@
         }
       }
       h1 {
-        color: #fad5e9;
         font-size: 8vw;
         margin: 0;
         font-weight: 400;
         letter-spacing: 6px;
-        text-shadow: 0 0 50px rgba(240, 146, 216, 0.6);
-        background: linear-gradient(to bottom, #fff, #f092d8);
+        text-shadow: 0 0 50px rgba(255, 255, 255, 0.35);
+        background: linear-gradient(to bottom, #fff, var(--accent));
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-family: "Cinzel", serif;
+        color: var(--text-main);
+        font-family: "Cinzel", "Times New Roman", serif;
         opacity: 0.95;
         text-align: center;
         pointer-events: none;
@@ -143,9 +168,9 @@
         align-items: flex-end;
       }
       .control-btn {
-        background: rgba(20, 20, 20, 0.6);
-        border: 1px solid rgba(240, 146, 216, 0.4);
-        color: #f092d8;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        color: var(--accent);
         padding: 10px 20px;
         cursor: pointer;
         text-transform: uppercase;
@@ -159,17 +184,17 @@
         min-width: 120px;
       }
       .control-btn.active {
-        background: rgba(240, 146, 216, 0.8);
-        color: #fff;
-        box-shadow: 0 0 15px rgba(240, 146, 216, 0.6);
+        background: rgba(255, 255, 255, 0.9);
+        color: #0f0a14;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
       }
       .control-btn:hover {
-        background: #f092d8;
+        background: var(--accent);
         color: #fff;
-        box-shadow: 0 0 20px rgba(240, 146, 216, 0.5);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.35);
       }
       .hint-text {
-        color: rgba(240, 146, 216, 0.5);
+        color: var(--hint);
         font-size: 9px;
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -195,8 +220,8 @@
         height: 50px;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.6);
-        border: 1px solid #f092d8;
-        color: #f092d8;
+        border: 1px solid var(--accent);
+        color: var(--accent);
         font-size: 20px;
         display: flex;
         align-items: center;
@@ -273,7 +298,7 @@
         backdrop-filter: blur(10px);
         padding: 15px;
         border-radius: 12px;
-        border: 1px solid rgba(240, 146, 216, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         width: 200px;
         transition: all 0.3s ease;
@@ -353,6 +378,20 @@
         <div class="mode-btn" onclick="setMode('SCATTER')">✨</div>
         <div class="mode-btn" onclick="setMode('FOCUS_RANDOM')">🔍</div>
       </div>
+      <div
+        id="theme-toggle"
+        class="control-btn"
+        style="
+          position: absolute;
+          top: 18px;
+          left: 18px;
+          z-index: 30;
+          pointer-events: auto;
+          padding: 8px 14px;
+        "
+      >
+        🌟 Christmas UI
+      </div>
       <div id="footer-stats" class="ui-hidden">
         <div class="stats-title">WORLDWIDE HEARTS</div>
         <div class="map-container">
@@ -399,10 +438,10 @@
         colors: {
           bg: 0x050d1a,
           fog: 0x050d1a,
-          pink: 0xf092d8,
-          darkPink: 0xd946a6,
+          pink: 0xd4af37,
+          darkPink: 0x9f7b20,
           deepGreen: 0x03180a,
-          lightPink: 0xf5c2e8,
+          lightPink: 0xffeebb,
         },
         particles: {
           count: 1500,
@@ -441,45 +480,13 @@
       let particleSystem = [],
         photoMeshGroup = new THREE.Group();
       let handLandmarker, video, caneTexture, snowSystem;
-      let goldMat, greenMat, redMat, candyMat, starMat;
-      let innerLight, spotGold, spotBlue, fillLight, star;
       let bloomPass;
-      const THEMES = {
-        XMAS: {
-          bg: 0x050d1a,
-          fog: 0x050d1a,
-          bodyBg:
-            "radial-gradient(circle at center, #0f2027 0%, #203a43 50%, #2c5364 100%)",
-          bodyBgSolid: "#050d1a",
-          accent: 0xf092d8,
-          accent2: 0xd4af37,
-          deepGreen: 0x03180a,
-          snow: 0xf092d8,
-          inner: 0xf092d8,
-          spot1: 0xf092d8,
-          spot2: 0xd4a5ff,
-          fill: 0xf5c2e8,
-        },
-        PINK: {
-          bg: 0x2a1620,
-          fog: 0x2a1620,
-          bodyBg:
-            "radial-gradient(circle at center, #3d1a2e 0%, #4a2a3a 50%, #5c3a4a 100%)",
-          bodyBgSolid: "#2a1620",
-          accent: 0xf092d8,
-          accent2: 0xf092d8,
-          deepGreen: 0x03180a,
-          snow: 0xf092d8,
-          inner: 0xf092d8,
-          spot1: 0xf092d8,
-          spot2: 0xd4a5ff,
-          fill: 0xf5c2e8,
-        },
-      };
-      let CURRENT_THEME = "XMAS";
+      let ambientLight, innerLight, spotGold, spotBlue, fillLight;
+      let snowMaterial;
       let raycaster = new THREE.Raycaster(),
         mouse = new THREE.Vector2();
       let isCameraRunning = false;
+      let lastThemeToggle = 0;
 
       function applyModeUIVisibility() {
         const hide = STATE.mode === "FOCUS";
@@ -500,32 +507,6 @@
           ?.classList.toggle("ui-hidden", hide);
       }
 
-      function applyThemeVisuals(name) {
-        const theme = THEMES[name];
-        CURRENT_THEME = name;
-        // Update background
-        document.body.style.background = theme.bodyBg;
-        document.body.style.backgroundColor = theme.bodyBgSolid;
-        // Update scene fog/bg
-        if (scene) {
-          scene.background = new THREE.Color(theme.bg);
-          scene.fog = new THREE.FogExp2(theme.fog, 0.015);
-        }
-        // Update lights
-        if (innerLight) innerLight.color.setHex(theme.inner);
-        if (spotGold) spotGold.color.setHex(theme.spot1);
-        if (spotBlue) spotBlue.color.setHex(theme.spot2);
-        if (fillLight) fillLight.color.setHex(theme.fill);
-        // Update materials
-        goldMat?.color.setHex(theme.accent);
-        greenMat?.color.setHex(theme.deepGreen);
-        redMat?.color.setHex(theme.darkPink ?? theme.accent);
-        candyMat?.color?.setHex?.(theme.accent);
-        starMat?.color.setHex(theme.accent);
-        starMat?.emissive.setHex(theme.accent);
-        if (snowSystem?.material) snowSystem.material.color.setHex(theme.snow);
-      }
-
       window.setMode = (mode) => {
         if (mode === "FOCUS_RANDOM") {
           STATE.mode = "FOCUS";
@@ -540,7 +521,113 @@
         applyModeUIVisibility();
       };
 
+      let currentTheme = "christmas";
+      const THEME = {
+        christmas: {
+          name: "Christmas UI",
+          title: "Merry Christmas",
+          hint: "Touch: Drag | Click Photo | Press 'S' for Stats",
+          bodyClass: "",
+        },
+        pink: {
+          name: "Valentine UI",
+          title: "❤️ For You ❤️",
+          hint: "Drag • Click • Press 'S' for Stats",
+          bodyClass: "theme-pink",
+        },
+      };
+
+      const THEME_COLORS = {
+        christmas: {
+          // match original christmas_tree.html palette (gold/green/red)
+          bg: 0x050d1a,
+          fog: 0x050d1a,
+          pink: 0xffd966, // gold accent
+          darkPink: 0x990000, // red accent
+          deepGreen: 0x03180a,
+          lightPink: 0xffeebb, // warm fill
+          spotBlue: 0x6688ff,
+        },
+        pink: {
+          bg: 0x2a1620,
+          fog: 0x2a1620,
+          pink: 0xf092d8,
+          darkPink: 0xd946a6,
+          deepGreen: 0x03180a,
+          lightPink: 0xf5c2e8,
+          spotBlue: 0xd4a5ff,
+        },
+      };
+
+      function applyTheme(themeKey) {
+        const theme = THEME[themeKey];
+        if (!theme) return;
+        document.body.className = theme.bodyClass;
+        const titleEl = document.querySelector("#ui-layer h1");
+        if (titleEl) titleEl.innerHTML = theme.title;
+        const hintEl = document.querySelector(".hint-text");
+        if (hintEl) hintEl.textContent = theme.hint;
+        const toggleBtn = document.getElementById("theme-toggle");
+        if (toggleBtn)
+          toggleBtn.textContent =
+            themeKey === "christmas" ? "💖 Valentine UI" : "🌟 Christmas UI";
+        currentTheme = themeKey;
+        applyTheme3D(themeKey);
+      }
+
+      function applyTheme3D(themeKey) {
+        const palette = THEME_COLORS[themeKey];
+        if (!palette) return;
+        CONFIG.colors = { ...palette };
+        if (scene) {
+          scene.background = new THREE.Color(palette.bg);
+          if (scene.fog) scene.fog.color = new THREE.Color(palette.fog);
+        }
+        if (innerLight) innerLight.color.setHex(palette.pink);
+        if (spotGold) spotGold.color.setHex(palette.pink);
+        if (fillLight) fillLight.color.setHex(palette.lightPink);
+        if (spotBlue) spotBlue.color.setHex(palette.spotBlue || palette.pink);
+        if (snowMaterial) {
+          snowMaterial.color.setHex(palette.pink);
+          snowMaterial.needsUpdate = true;
+        }
+        particleSystem.forEach((p) => {
+          const mat = p.mesh.material;
+          if (!mat || !mat.color) return;
+          if (p.type === "BOX") mat.color.setHex(palette.deepGreen);
+          else if (p.type === "GOLD_BOX" || p.type === "GOLD_SPHERE")
+            mat.color.setHex(palette.pink);
+          else if (p.type === "RED") mat.color.setHex(palette.darkPink);
+          if (mat.emissive) {
+            if (p.type === "GOLD_BOX" || p.type === "GOLD_SPHERE")
+              mat.emissive.setHex(palette.darkPink);
+            else if (p.type === "BOX") mat.emissive.setHex(0x002200);
+          }
+          mat.needsUpdate = true;
+        });
+        photoMeshGroup.children.forEach((g) => {
+          g.traverse((child) => {
+            if (child.isMesh && child.geometry.type === "BoxGeometry") {
+              if (child.material.color)
+                child.material.color.setHex(palette.pink);
+              if (child.material.emissive)
+                child.material.emissive.setHex(palette.pink);
+              child.material.needsUpdate = true;
+            }
+          });
+        });
+      }
+
+      function toggleTheme() {
+        applyTheme(currentTheme === "christmas" ? "pink" : "christmas");
+      }
+
+      document.getElementById("theme-toggle")?.addEventListener("click", () => {
+        toggleTheme();
+      });
+
       async function init() {
+        applyTheme("christmas");
         initThree();
         setupEnvironment();
         setupLights();
@@ -552,7 +639,6 @@
         setupEvents();
         setupTouchAndClick();
         applyModeUIVisibility();
-        applyThemeVisuals(CURRENT_THEME);
         document.getElementById("loader").style.opacity = 0;
         setTimeout(() => document.getElementById("loader").remove(), 800);
         animate();
@@ -591,19 +677,20 @@
       }
 
       function setupLights() {
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        innerLight = new THREE.PointLight(THEMES[CURRENT_THEME].inner, 2, 20);
+        ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        innerLight = new THREE.PointLight(CONFIG.colors.pink, 2, 20);
         innerLight.position.set(0, 5, 0);
         mainGroup.add(innerLight);
-        spotGold = new THREE.SpotLight(THEMES[CURRENT_THEME].spot1, 1200);
+        spotGold = new THREE.SpotLight(CONFIG.colors.pink, 1200);
         spotGold.position.set(30, 40, 40);
         spotGold.angle = 0.5;
         spotGold.penumbra = 0.5;
         scene.add(spotGold);
-        spotBlue = new THREE.SpotLight(THEMES[CURRENT_THEME].spot2, 800);
+        spotBlue = new THREE.SpotLight(0xd4a5ff, 800);
         spotBlue.position.set(-30, 20, -30);
         scene.add(spotBlue);
-        fillLight = new THREE.DirectionalLight(THEMES[CURRENT_THEME].fill, 0.8);
+        fillLight = new THREE.DirectionalLight(CONFIG.colors.lightPink, 0.8);
         fillLight.position.set(0, 0, 50);
         scene.add(fillLight);
       }
@@ -675,8 +762,8 @@
           "userData",
           new THREE.Float32BufferAttribute(velocities, 2)
         );
-        const material = new THREE.PointsMaterial({
-          color: 0xf092d8,
+        snowMaterial = new THREE.PointsMaterial({
+          color: CONFIG.colors.pink,
           size: 0.4,
           map: snowTexture,
           transparent: true,
@@ -684,7 +771,7 @@
           blending: THREE.AdditiveBlending,
           depthWrite: false,
         });
-        snowSystem = new THREE.Points(geometry, material);
+        snowSystem = new THREE.Points(geometry, snowMaterial);
         scene.add(snowSystem);
       }
 
@@ -867,31 +954,32 @@
       function createParticles() {
         const sphereGeo = new THREE.SphereGeometry(0.5, 32, 32);
         const boxGeo = new THREE.BoxGeometry(0.55, 0.55, 0.55);
-        goldMat = new THREE.MeshStandardMaterial({
-          color: THEMES[CURRENT_THEME].accent,
+        const goldMat = new THREE.MeshStandardMaterial({
+          color: CONFIG.colors.pink,
           metalness: 1.0,
           roughness: 0.1,
           envMapIntensity: 2.0,
-          emissive: 0x8b4c6e,
+          emissive: CONFIG.colors.darkPink,
           emissiveIntensity: 0.3,
         });
-        greenMat = new THREE.MeshStandardMaterial({
-          color: THEMES[CURRENT_THEME].deepGreen,
+        const greenMat = new THREE.MeshStandardMaterial({
+          color: CONFIG.colors.deepGreen,
           metalness: 0.2,
           roughness: 0.8,
           emissive: 0x002200,
           emissiveIntensity: 0.2,
         });
-        redMat = new THREE.MeshPhysicalMaterial({
-          color: 0xd946a6,
+        const redMat = new THREE.MeshPhysicalMaterial({
+          color: CONFIG.colors.darkPink,
           metalness: 0.3,
           roughness: 0.2,
           clearcoat: 1.0,
-          emissive: 0x660033,
+          emissive: 0x330000,
         });
-        candyMat = new THREE.MeshStandardMaterial({
+        const candyMat = new THREE.MeshStandardMaterial({
           map: caneTexture,
           roughness: 0.4,
+          color: CONFIG.colors.pink,
         });
         const curve = new THREE.CatmullRomCurve3([
           new THREE.Vector3(0, -0.5, 0),
@@ -948,14 +1036,14 @@
           bevelSegments: 2,
         });
         starGeo.center();
-        starMat = new THREE.MeshStandardMaterial({
-          color: THEMES[CURRENT_THEME].accent,
-          emissive: THEMES[CURRENT_THEME].accent,
+        const starMat = new THREE.MeshStandardMaterial({
+          color: CONFIG.colors.pink,
+          emissive: CONFIG.colors.pink,
           emissiveIntensity: 1.0,
           metalness: 1.0,
           roughness: 0,
         });
-        star = new THREE.Mesh(starGeo, starMat);
+        const star = new THREE.Mesh(starGeo, starMat);
         star.position.set(0, CONFIG.particles.treeHeight / 2 + 1.2, 0);
         mainGroup.add(star);
         mainGroup.add(photoMeshGroup);
@@ -979,9 +1067,11 @@
       function addPhotoToScene(texture) {
         const frameGeo = new THREE.BoxGeometry(1.4, 1.4, 0.05);
         const frameMat = new THREE.MeshStandardMaterial({
-          color: 0xf092d8,
+          color: CONFIG.colors.pink,
           metalness: 1.0,
           roughness: 0.1,
+          emissive: CONFIG.colors.pink,
+          emissiveIntensity: 0.25,
         });
         const frame = new THREE.Mesh(frameGeo, frameMat);
         let width = 1.2,
@@ -1195,25 +1285,13 @@
           const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
           const extensionRatio = avgTipDist / handSize;
           const pinchRatio = pinchDist / handSize;
-          // Detect 3+ raised fingers to trigger theme switch to PINK
-          let extendedCount = 0;
-          const fingerIndices = [
-            { tip: 8, base: 5 },
-            { tip: 12, base: 9 },
-            { tip: 16, base: 13 },
-            { tip: 20, base: 17 },
-          ];
-          fingerIndices.forEach((idx) => {
-            const tip = lm[idx.tip];
-            const base = lm[idx.base];
-            const dist = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
-            const baseDist = Math.hypot(base.x - wrist.x, base.y - wrist.y);
-            if (dist > baseDist * 1.05) extendedCount++;
-          });
-          if (extendedCount >= 3 && CURRENT_THEME !== "PINK") {
-            applyThemeVisuals("PINK");
-          }
           let modeChanged = false;
+          // Gesture: very open hand toggles theme (debounced)
+          const now = performance.now();
+          if (extensionRatio > 2.3 && now - lastThemeToggle > 1500) {
+            toggleTheme();
+            lastThemeToggle = now;
+          }
           if (extensionRatio < 1.5) {
             STATE.mode = "TREE";
             STATE.focusTarget = null;
