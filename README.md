@@ -1,112 +1,90 @@
-# 🎄 Grand Luxury Interactive Christmas Tree
 
-An immersive, high-fidelity 3D Christmas tree experience featuring hand gesture control, dynamic chaos-to-order assembly, and luxurious emerald and gold aesthetics.
+# 🎄 Grand Luxury Tree
 
-## 📝 Prompt
+[![Contributors](https://img.shields.io/github/contributors/electronicminer/gesture-Christmas_tree-3d_with_photo?color=dark-green)](https://github.com/electronicminer/gesture-Christmas_tree-3d_with_photo/graphs/contributors)
 
-Gemini 3 in Google AI Studio and Claude 4.5 Sonnet in Cursor:
+哈喽！这是一个为了庆祝圣诞节写的小项目。✨
 
+原本只是想画一棵普通的 3D 圣诞树，但觉得不够酷，于是加上了 **手势识别** 和 **粒子特效**。现在你可以通过摄像头“隔空”控制这棵树，还能把自己喜欢的照片挂上去。
+
+虽然只有几百行代码，但视觉效果拉满了（特别是在大屏幕上）。
+
+点击下面的链接可以直接访问：
+https://electronicminer.github.io/gesture-Christmas_tree-3d_with_photo/christmas_tree_touch&gesture.html
+
+<img width="2559" height="1439" alt="image" src="https://github.com/user-attachments/assets/45f3ec57-00b5-4989-b3b2-484772ad95cf" />
+
+
+## 🤔 这是啥？(Intro)
+
+这不是那种静态的网页贺卡。这是一棵由 **几千个粒子** 组成的动态树。
+我接入了 Google 的 MediaPipe，所以它能看懂你的手势。
+
+* **粒子特效**：树会呼吸、旋转，还能炸裂成满天星。
+* **隔空控物**：不需要鼠标，对着摄像头挥挥手就能控制它（感觉像奇异博士）。
+* **挂载回忆**：点右上角的按钮上传照片，它们会变成带金框的拍立得，飘在树周围。
+* **极简审美**：只有黑金配色，没有花里胡哨的装饰，主打一个“高级感”。
+<img width="2557" height="1291" alt="image" src="https://github.com/user-attachments/assets/d7d31b4c-bf4d-49b2-b922-79813bbddba5" />
+
+<img width="2559" height="1294" alt="image" src="https://github.com/user-attachments/assets/d7e4e982-3042-449d-8898-105048aeac1d" />
+
+
+## 🛠️ 用了什么 (Tech)
+
+纯纯的前端魔法，没用复杂的框架：
+* **Three.js** - 搞定 3D 渲染和粒子系统。
+* **MediaPipe** - 搞定手势识别（这东西太强了）。
+* **原生 JS (ES Modules)** - 手搓核心逻辑。
+
+## 🎮 怎么玩？(Controls)
+
+第一次玩建议把音响打开（虽然还没加背景音乐，但你可以自己放首 Jingle Bells 🎵）。
+
+### 🖐️ 手势模式 (重点！)
+确保浏览器允许使用摄像头，然后：
+1.  **张开手掌 (🖐️)**：这就是“炸裂模式”！树会散开变成星云，你可以转动视角。
+2.  **握紧拳头 (✊)**：收！粒子会重新聚合成圣诞树。
+3.  **捏合手指 (🤏)**：就像在捏东西一样，它会随机抓取一张照片放大给你看。
+
+### 🖱️ 鼠标党
+* 左键拖拽旋转，滚轮缩放。
+* **H 键**：按下可以隐藏所有 UI，用来截图或录屏当壁纸很棒。
+
+## 🚀 跑起来 (How to Run)
+
+⚠️ **注意：** 因为用到了 ES Modules 和摄像头权限，**千万不要直接双击 `index.html` 打开**，浏览器会报错（CORS 策略限制）。你得起一个本地服务器。
+
+**如果你有 VS Code (推荐):**
+装个 `Live Server` 插件，右键 `index.html` -> "Open with Live Server"。搞定。
+
+**如果你是 Python 大佬:**
+在目录下打开终端：
+```bash
+python -m http.server 8000
+````
+
+然后浏览器访问 `localhost:8000`。
+
+**如果你习惯 Node.js:**
+
+```bash
+npx http-server .
 ```
-角色设定： 你是一位精通 React 19、TypeScript 和 Three.js (R3F) 的 3D 创意开发专家。 任务目标： 构建一个名为“豪华互动圣诞树 (Grand Luxury Interactive Christmas Tree)”的高保真 3D Web 应用。视觉风格需呈现“特朗普式”的奢华感，主色调为深祖母绿和高光金色，并伴有电影级的辉光效果。 技术栈： React 19, TypeScript, React Three Fiber, Drei, Postprocessing, Tailwind CSS。
-核心逻辑与架构： 状态机： 包含 CHAOS（混沌散落）和 FORMED（聚合成树）两种状态，并在两者间动态变形。 双坐标系统 (Dual-Position System)： 所有元素（针叶、装饰物）初始化时需分配两个坐标： ChaosPosition：球形空间内的随机坐标。 TargetPosition：构成树木圆锥形状的目标坐标。
-TargetPosition：构成树木圆锥形状的目标坐标。 在 useFrame 中根据进度 在两者间进行插值 (Lerp)。具体实现细节： 针叶系统 (Foliage)： 使用 THREE.Points 和自定义 ShaderMaterial 渲染大量粒子。 装饰物 (Ornaments)： 使用 InstancedMesh 优化渲染。分为各种颜色的礼物盒（重）、各种颜色的彩球（轻）、各种点缀灯光（极轻），赋予不同的物理推力权重。使用 Lerp 实现丝滑的归位动画。 后期处理： 启用 Bloom 效果（阈值 0.8，强度 1.2），营造“金色光晕”。
-场景配置： 摄像机位置 [0, 4, 20]，使用 Lobby HDRI 环境光。
-在里面加上很多拍立得样式的照片的装饰。
-使用摄像头图像检测手势，手势张开代表 unleash，闭上就变回圣诞树。通过手的移动可以调整视角。
-```
-
-## 🛠️ Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd grand-luxury-interactive-christmas-tree
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-   
-   > 📝 Note: Local dev mode uses localStorage for sharing (works in same browser only)
-   > For full cloud sharing, see step 4
-
-4. **Configure Cloudflare (Optional - for cloud sharing):**
-   - Follow the detailed guide in `cloudflare-setup.md`
-   - Copy `env.example` to `.env.local` and fill in your Cloudflare credentials
-   - Use `npm run dev:vercel` to test with full Vercel environment
-
-5. **Open your browser:**
-   - Navigate to `http://localhost:3010`
-   - Allow camera access for gesture control
-   - Click "上传照片" to upload your photos
 
 
-## 🎯 Usage
 
-### Photo Upload & Sharing
+**Merry Christmas\! 🎅**
+如果你觉得这项目有点意思，欢迎 Star，或者 Fork 改成你喜欢的颜色！
 
-1. **Upload Photos:**
-   - Click "上传照片" button to select up to 22 images
-   - Photos will appear as polaroids on the Christmas tree
+新增移动端网页支持
+## Contributors ✨
 
-2. **Generate Share Link:**
-   - After uploading photos, click "生成分享链接"
-   - Wait 2-3 seconds for the upload to complete
-   - Copy the generated link and share with friends
+感谢所有为本项目做出贡献的开发者：
 
-3. **View Shared Photos:**
-   - Friends can open the share link in any browser
-   - Photos will automatically load on the Christmas tree
-   - No login or app installation required
-   - Links expire after 30 days
+<a href="https://github.com/electronicminer/gesture-Christmas_tree-3d_with_photo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=electronicminer/gesture-Christmas_tree-3d_with_photo" />
+</a>
 
-### Gesture Controls
+## 📊 Star History
 
-1. **Position your hand** in front of the webcam (visible in top-right preview)
-2. **Move your hand** to control the camera angle:
-   - Left/Right: Horizontal rotation
-   - Up/Down: Vertical tilt
-3. **Open your hand** (spread all fingers): Unleash chaos mode
-4. **Close your fist**: Restore tree to formed mode
-
-### Mouse Controls
-
-When no hand is detected, you can:
-- **Click and drag** to rotate the view
-- **Scroll** to zoom in/out
-- **Right-click and drag** to pan (disabled by default)
-
-## 🏗️ Tech Stack
-
-### Frontend
-- React 19 with TypeScript
-- React Three Fiber (R3F) for 3D rendering
-- Three.js for WebGL graphics
-- @react-three/drei for helpers
-- @react-three/postprocessing for visual effects
-- MediaPipe for hand gesture detection
-- Tailwind CSS for styling
-
-### Backend (Photo Sharing)
-- Vercel Serverless Functions
-- Cloudflare R2 (S3-compatible object storage)
-- Cloudflare KV (key-value storage)
-- AWS SDK S3 Client for R2 integration
-
-### Features
-- Hand gesture control via webcam
-- Dynamic state transitions (CHAOS ↔ FORMED)
-- Photo upload and cloud sharing
-- Temporary share links (30-day expiration)
-- Instanced rendering for performance
-- Bloom and post-processing effects
-
-## 🎅 Happy Holidays!
-
-May your code be merry and bright! 🎄✨
+[![Star History Chart](https://api.star-history.com/svg?repos=electronicminer/gesture-Christmas_tree-3d_with_photo&type=Date)](https://star-history.com/#electronicminer/gesture-Christmas_tree-3d_with_photo&Date)
