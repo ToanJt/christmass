@@ -488,9 +488,6 @@
         mouse = new THREE.Vector2();
       let isCameraRunning = false;
       let lastThemeToggle = 0;
-      let faceDetector = null;
-      let faceTimer = null;
-      let lastFaceSeenAt = performance.now();
       const GESTURE_POINTS = [];
 
       function applyModeUIVisibility() {
@@ -627,7 +624,60 @@
         applyTheme(currentTheme === "christmas" ? "pink" : "christmas");
       }
 
-      // Toggle button hidden; no click handler needed
+      document.getElementById("theme-toggle")?.addEventListener("click", () => {
+        toggleTheme();
+      });
+
+      function recordGesturePoint(tip, handSize) {
+        const x = (tip.x - 0.5) * 2;
+        const y = (tip.y - 0.5) * 2;
+        const now = performance.now();
+        GESTURE_POINTS.push({ x, y, t: now, size: handSize });
+        while (GESTURE_POINTS.length && now - GESTURE_POINTS[0].t > 1800) {
+          GESTURE_POINTS.shift();
+        }
+      }
+
+      function detectHeartGesture() {
+        if (GESTURE_POINTS.length < 20) return false;
+        const now = performance.now();
+        if (now - lastThemeToggle < 1800) return false;
+        const points = GESTURE_POINTS;
+        const xs = points.map((p) => p.x);
+        const ys = points.map((p) => p.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const width = maxX - minX;
+        const height = maxY - minY;
+        if (width < 0.25 || height < 0.2) return false; // too small
+        const idxTop = ys.indexOf(minY);
+        const idxBottom = ys.indexOf(maxY);
+        const idxLeft = xs.indexOf(minX);
+        const idxRight = xs.indexOf(maxX);
+        // Expect order: start near bottom, go left, up to top, across to right, down to bottom
+        const length = points.length;
+        if (
+          !(
+            idxBottom < idxLeft &&
+            idxLeft < idxTop &&
+            idxTop < idxRight &&
+            idxRight < length - 3
+          )
+        )
+          return false;
+        // Symmetry check: top near center x, left/right distances similar
+        const cx = (minX + maxX) / 2;
+        if (Math.abs(points[idxTop].x - cx) > width * 0.25) return false;
+        const leftDist = Math.abs(minX - cx);
+        const rightDist = Math.abs(maxX - cx);
+        if (Math.abs(leftDist - rightDist) > width * 0.25) return false;
+        // Ensure we return near bottom at end
+        const end = points[length - 1];
+        if (Math.abs(end.y - maxY) > 0.1) return false;
+        return true;
+      }
 
       async function init() {
         applyTheme("christmas");
@@ -1266,8 +1316,6 @@
         requestAnimationFrame(predictWebcam);
       }
 
-      // Face monitor removed; theme toggle now driven by hand circle gesture
-
       function processGestures(result) {
         if (result.landmarks && result.landmarks.length > 0) {
           STATE.hand.detected = true;
@@ -1292,8 +1340,9 @@
           const pinchRatio = pinchDist / handSize;
           let modeChanged = false;
           recordGesturePoint(lm[8], handSize);
-          if (detectCircularGesture()) {
+          if (detectHeartGesture()) {
             toggleTheme();
+            lastThemeToggle = performance.now();
           }
           if (extensionRatio < 1.5) {
             STATE.mode = "TREE";
@@ -1317,53 +1366,6 @@
         } else {
           STATE.hand.detected = false;
         }
-      }
-
-      function recordGesturePoint(tip, handSize) {
-        // use normalized coords centered
-        const x = (tip.x - 0.5) * 2;
-        const y = (tip.y - 0.5) * 2;
-        const now = performance.now();
-        GESTURE_POINTS.push({ x, y, t: now, size: handSize });
-        // keep last 1.5s
-        while (GESTURE_POINTS.length && now - GESTURE_POINTS[0].t > 1500) {
-          GESTURE_POINTS.shift();
-        }
-      }
-
-      function detectCircularGesture() {
-        if (GESTURE_POINTS.length < 12) return false;
-        const now = performance.now();
-        if (now - lastThemeToggle < 2000) return false;
-        const points = GESTURE_POINTS;
-        const xs = points.map((p) => p.x);
-        const ys = points.map((p) => p.y);
-        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-        const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-        const radii = points.map((p) => Math.hypot(p.x - cx, p.y - cy));
-        const rAvg = radii.reduce((a, b) => a + b, 0) / radii.length;
-        if (rAvg < 0.08 || rAvg > 0.5) return false;
-        const rVar =
-          radii.reduce((a, r) => a + Math.abs(r - rAvg), 0) / radii.length;
-        if (rVar > rAvg * 0.45) return false; // too wobbly
-        let angleStart = Math.atan2(points[0].y - cy, points[0].x - cx);
-        let angleEnd = angleStart;
-        let totalDelta = 0;
-        for (let i = 1; i < points.length; i++) {
-          const aPrev = Math.atan2(points[i - 1].y - cy, points[i - 1].x - cx);
-          const aCur = Math.atan2(points[i].y - cy, points[i].x - cx);
-          let d = aCur - aPrev;
-          if (d > Math.PI) d -= Math.PI * 2;
-          if (d < -Math.PI) d += Math.PI * 2;
-          totalDelta += d;
-          angleEnd = aCur;
-        }
-        const arc = Math.abs(totalDelta);
-        if (arc < Math.PI * 1.4) return false; // need ~3/4 circle
-        if (arc > Math.PI * 3.2) return false; // too many spins/noise
-        lastThemeToggle = now;
-        GESTURE_POINTS.length = 0;
-        return true;
       }
 
       function animate() {
