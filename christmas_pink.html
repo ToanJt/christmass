@@ -12,7 +12,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>❤️ For You ❤️</title>
+    <title>❤️ Nhím iu ❤️</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -326,7 +326,7 @@
     <div id="msg-box"></div>
     <div id="canvas-container"></div>
     <div id="ui-layer">
-      <h1>✨ For You ✨</h1>
+      <h1>🦌 Christmas 🎄</h1>
       <div class="controls-wrapper">
         <div class="btn-group">
           <div class="control-btn" id="cam-btn">📷 Gesture</div>
@@ -441,6 +441,7 @@
       let particleSystem = [],
         photoMeshGroup = new THREE.Group();
       let handLandmarker, video, caneTexture, snowSystem;
+      let bloomPass;
       let raycaster = new THREE.Raycaster(),
         mouse = new THREE.Vector2();
       let isCameraRunning = false;
@@ -455,6 +456,12 @@
           ?.classList.toggle("ui-hidden", hide);
         document
           .getElementById("footer-stats")
+          ?.classList.toggle("ui-hidden", hide);
+        document
+          .getElementById("ui-layer")
+          ?.classList.toggle("ui-hidden", hide);
+        document
+          .getElementById("audio-toggle")
           ?.classList.toggle("ui-hidden", hide);
       }
 
@@ -541,7 +548,7 @@
 
       function setupPostProcessing() {
         const renderScene = new RenderPass(scene, camera);
-        const bloomPass = new UnrealBloomPass(
+        bloomPass = new UnrealBloomPass(
           new THREE.Vector2(window.innerWidth, window.innerHeight),
           1.5,
           0.4,
@@ -740,12 +747,12 @@
           }
           let target = mode === "SCATTER" ? this.posScatter : this.posTree;
           if (mode === "FOCUS" && this.mesh === focusTargetMesh) {
-            const forward = new THREE.Vector3();
-            camera.getWorldDirection(forward);
-            const desiredWorldPos = camera.position
-              .clone()
-              .add(forward.multiplyScalar(IS_MOBILE ? 12 : 14));
-            desiredWorldPos.y += 1.5;
+            // Place focused photo dead-center in camera space for consistent framing
+            const desiredWorldPos = new THREE.Vector3(
+              0,
+              1.2,
+              -(IS_MOBILE ? 10 : 12)
+            ).applyMatrix4(camera.matrixWorld);
             const invMatrix = new THREE.Matrix4()
               .copy(mainGroup.matrixWorld)
               .invert();
@@ -1171,12 +1178,37 @@
             STATE.rotation.y += 0.1 * dt;
           }
         }
+        if (STATE.mode === "FOCUS") {
+          STATE.rotation.y += (0 - STATE.rotation.y) * 3.0 * dt;
+          STATE.rotation.x += (0 - STATE.rotation.x) * 3.0 * dt;
+        }
         mainGroup.rotation.y = STATE.rotation.y;
         mainGroup.rotation.x = STATE.rotation.x;
         particleSystem.forEach((p) =>
           p.update(dt, STATE.mode, STATE.focusTarget)
         );
         updateSnow();
+        const targetExposure = STATE.mode === "FOCUS" ? 1.35 : 2.0;
+        renderer.toneMappingExposure = THREE.MathUtils.lerp(
+          renderer.toneMappingExposure,
+          targetExposure,
+          2.5 * dt
+        );
+        if (bloomPass) {
+          const targetBloom =
+            STATE.mode === "FOCUS"
+              ? IS_MOBILE
+                ? 0.22
+                : 0.28
+              : IS_MOBILE
+              ? 0.35
+              : 0.5;
+          bloomPass.strength = THREE.MathUtils.lerp(
+            bloomPass.strength,
+            targetBloom,
+            2.5 * dt
+          );
+        }
         composer.render();
       }
 

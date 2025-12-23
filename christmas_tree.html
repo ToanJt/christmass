@@ -432,6 +432,7 @@
             Select Files
             <input type="file" id="file-input" multiple accept="image/*" />
           </label>
+          <div class="control-btn" id="switch-pink">🎀 Switch to Pink</div>
         </div>
         <!-- 【修改】添加了 Press 'S' for Stats 的提示 -->
         <div class="hint-text">
@@ -555,6 +556,28 @@
         touch: { active: false, startX: 0, startY: 0, lastX: 0, lastY: 0 },
       };
 
+      const THEMES = {
+        classic: {
+          bg: CONFIG.colors.bg,
+          fog: CONFIG.colors.fog,
+          gold: 0xffd966,
+          green: CONFIG.colors.deepGreen,
+          red: CONFIG.colors.accentRed,
+          inner: 0xffaa00,
+          star: 0xffdd88,
+        },
+        pink: {
+          bg: 0x2a1620,
+          fog: 0x2a1620,
+          gold: 0xf092d8,
+          green: 0x03180a,
+          red: 0xd946a6,
+          inner: 0xf092d8,
+          star: 0xf092d8,
+        },
+      };
+      let currentTheme = "classic";
+
       let scene, camera, renderer, composer;
       let mainGroup;
       let clock = new THREE.Clock();
@@ -565,6 +588,10 @@
       let snowSystem;
       let raycaster = new THREE.Raycaster();
       let mouse = new THREE.Vector2();
+      let lastHandX = 0;
+      let lastHandTs = 0;
+      let lastSwipeTs = 0;
+      let innerLight, starMesh;
 
       const debugInfo = document.getElementById("debug-info");
       const camBtn = document.getElementById("cam-btn");
@@ -747,7 +774,7 @@
       function setupLights() {
         const ambient = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambient);
-        const innerLight = new THREE.PointLight(0xffaa00, 2, 20);
+        innerLight = new THREE.PointLight(0xffaa00, 2, 20);
         innerLight.position.set(0, 5, 0);
         mainGroup.add(innerLight);
         const spotGold = new THREE.SpotLight(0xffcc66, 1200);
@@ -920,14 +947,11 @@
           let target = mode === "SCATTER" ? this.posScatter : this.posTree;
           if (mode === "FOCUS") {
             if (this.mesh === focusTargetMesh) {
-              // Keep focused photo aligned to true screen center (fixes mobile offset)
-              const forward = new THREE.Vector3();
-              camera.getWorldDirection(forward);
-              const distance = IS_MOBILE ? 12 : 14;
-              const desiredWorldPos = camera.position
-                .clone()
-                .add(forward.multiplyScalar(distance));
-              desiredWorldPos.y += 1.5; // subtle lift to center vertically
+              const desiredWorldPos = new THREE.Vector3(
+                0,
+                1.2,
+                -(IS_MOBILE ? 10 : 12)
+              ).applyMatrix4(camera.matrixWorld);
               const invMatrix = new THREE.Matrix4()
                 .copy(mainGroup.matrixWorld)
                 .invert();
@@ -1093,9 +1117,9 @@
           metalness: 1.0,
           roughness: 0,
         });
-        const star = new THREE.Mesh(starGeo, starMat);
-        star.position.set(0, CONFIG.particles.treeHeight / 2 + 1.2, 0);
-        mainGroup.add(star);
+        starMesh = new THREE.Mesh(starGeo, starMat);
+        starMesh.position.set(0, CONFIG.particles.treeHeight / 2 + 1.2, 0);
+        mainGroup.add(starMesh);
         mainGroup.add(photoMeshGroup);
       }
 
@@ -1112,6 +1136,34 @@
           mainGroup.add(mesh);
           particleSystem.push(new Particle(mesh, "DUST", true));
         }
+      }
+
+      function applyThemeColors(themeName) {
+        const t = THEMES[themeName];
+        if (!t) return;
+        currentTheme = themeName;
+        scene.background.setHex(t.bg);
+        scene.fog.color.setHex(t.fog);
+        if (innerLight) innerLight.color.setHex(t.inner);
+        if (starMesh && starMesh.material) {
+          starMesh.material.color.setHex(t.star);
+          if (starMesh.material.emissive)
+            starMesh.material.emissive.setHex(t.star);
+        }
+        particleSystem.forEach((p) => {
+          const mat = p.mesh.material;
+          if (!mat || !mat.color) return;
+          if (p.type === "GOLD_BOX" || p.type === "GOLD_SPHERE") {
+            mat.color.setHex(t.gold);
+            if (mat.emissive) mat.emissive.setHex(t.gold);
+          } else if (p.type === "BOX") {
+            mat.color.setHex(t.green);
+            if (mat.emissive) mat.emissive.setHex(t.green);
+          } else if (p.type === "RED") {
+            mat.color.setHex(t.red);
+            if (mat.emissive) mat.emissive.setHex(t.red);
+          }
+        });
       }
 
       function addPhotoToScene(texture) {
@@ -1292,6 +1344,17 @@
             middleMCP.y - wrist.y
           );
           if (handSize < 0.02) return;
+          const now = performance.now();
+          if (lastHandTs > 0) {
+            const dt = now - lastHandTs;
+            const dx = STATE.hand.x - lastHandX;
+            if (dt < 250 && dx > 0.6 && now - lastSwipeTs > 1200) {
+              lastSwipeTs = now;
+              setTheme("pink");
+            }
+          }
+          lastHandX = STATE.hand.x;
+          lastHandTs = now;
           const tips = [lm[8], lm[12], lm[16], lm[20]];
           let avgTipDist = 0;
           tips.forEach(
@@ -1342,6 +1405,9 @@
           .addEventListener("change", handleImageUpload);
         camBtn.addEventListener("click", () => {
           initMediaPipe();
+        });
+        document.getElementById("switch-pink").addEventListener("click", () => {
+          applyThemeColors("pink");
         });
         window.addEventListener("keydown", (e) => {
           const key = e.key.toLowerCase();
