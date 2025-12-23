@@ -313,6 +313,7 @@
         z-index: 40;
         pointer-events: auto;
         display: flex;
+        display: none;
         flex-direction: column;
         gap: 12px;
         /* 整体磨砂玻璃面板效果 */
@@ -569,6 +570,16 @@
       const camBtn = document.getElementById("cam-btn");
       let isCameraRunning = false;
 
+      function applyModeUIVisibility() {
+        const hide = STATE.mode === "FOCUS";
+        const controls = document.querySelector(".controls-wrapper");
+        const modeBar = document.getElementById("mode-bar");
+        const stats = document.getElementById("footer-stats");
+        if (controls) controls.classList.toggle("ui-hidden", hide);
+        if (modeBar) modeBar.classList.toggle("ui-hidden", hide);
+        if (stats) stats.classList.toggle("ui-hidden", hide);
+      }
+
       // 全局暴露给HTML按钮调用
       window.setMode = (mode) => {
         if (mode === "FOCUS_RANDOM") {
@@ -581,6 +592,7 @@
           STATE.mode = mode;
           if (mode === "TREE") STATE.focusTarget = null;
         }
+        applyModeUIVisibility();
       };
 
       optimizeForMobile();
@@ -597,6 +609,7 @@
         setupPostProcessing();
         setupEvents();
         setupTouchAndClick();
+        applyModeUIVisibility();
 
         const loader = document.getElementById("loader");
         loader.style.opacity = 0;
@@ -673,6 +686,7 @@
               STATE.focusTarget = null;
             }
           }
+          applyModeUIVisibility();
         });
         let lastTap = 0;
         container.addEventListener("touchend", (e) => {
@@ -681,6 +695,7 @@
           if (tapLength < 300 && tapLength > 0) {
             STATE.mode = STATE.mode === "SCATTER" ? "TREE" : "SCATTER";
             e.preventDefault();
+            applyModeUIVisibility();
           }
           lastTap = currentTime;
         });
@@ -905,7 +920,14 @@
           let target = mode === "SCATTER" ? this.posScatter : this.posTree;
           if (mode === "FOCUS") {
             if (this.mesh === focusTargetMesh) {
-              const desiredWorldPos = new THREE.Vector3(0, 2, 35);
+              // Keep focused photo aligned to true screen center (fixes mobile offset)
+              const forward = new THREE.Vector3();
+              camera.getWorldDirection(forward);
+              const distance = IS_MOBILE ? 12 : 14;
+              const desiredWorldPos = camera.position
+                .clone()
+                .add(forward.multiplyScalar(distance));
+              desiredWorldPos.y += 1.5; // subtle lift to center vertically
               const invMatrix = new THREE.Matrix4()
                 .copy(mainGroup.matrixWorld)
                 .invert();
@@ -1280,9 +1302,11 @@
           const extensionRatio = avgTipDist / handSize;
           const pinchRatio = pinchDist / handSize;
           debugInfo.innerText = `Gesture Detected: ${STATE.mode}`;
+          let modeChanged = false;
           if (extensionRatio < 1.5) {
             STATE.mode = "TREE";
             STATE.focusTarget = null;
+            modeChanged = true;
           } else if (pinchRatio < 0.35) {
             if (STATE.mode !== "FOCUS") {
               STATE.mode = "FOCUS";
@@ -1290,11 +1314,14 @@
               if (photos.length)
                 STATE.focusTarget =
                   photos[Math.floor(Math.random() * photos.length)].mesh;
+              modeChanged = true;
             }
           } else if (extensionRatio > 1.7) {
             STATE.mode = "SCATTER";
             STATE.focusTarget = null;
+            modeChanged = true;
           }
+          if (modeChanged) applyModeUIVisibility();
         } else {
           STATE.hand.detected = false;
         }
