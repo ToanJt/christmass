@@ -386,8 +386,9 @@
           top: 18px;
           left: 18px;
           z-index: 30;
-          pointer-events: auto;
+          pointer-events: none;
           padding: 8px 14px;
+          opacity: 0;
         "
       >
         🌟 Christmas UI
@@ -487,6 +488,9 @@
         mouse = new THREE.Vector2();
       let isCameraRunning = false;
       let lastThemeToggle = 0;
+      let faceDetector = null;
+      let faceTimer = null;
+      let lastFaceSeenAt = performance.now();
 
       function applyModeUIVisibility() {
         const hide = STATE.mode === "FOCUS";
@@ -622,9 +626,7 @@
         applyTheme(currentTheme === "christmas" ? "pink" : "christmas");
       }
 
-      document.getElementById("theme-toggle")?.addEventListener("click", () => {
-        toggleTheme();
-      });
+      // Toggle button hidden; no click handler needed
 
       async function init() {
         applyTheme("christmas");
@@ -1238,6 +1240,7 @@
           });
           video.srcObject = stream;
           video.addEventListener("loadeddata", predictWebcam);
+          startFaceMonitor();
           document.getElementById("webcam-wrapper").style.opacity = 1;
           camBtn.innerText = "Gesture Active";
           camBtn.classList.add("active");
@@ -1263,6 +1266,45 @@
         requestAnimationFrame(predictWebcam);
       }
 
+      function startFaceMonitor() {
+        if (typeof FaceDetector === "undefined") {
+          console.warn(
+            "FaceDetector API not available; theme auto-switch disabled."
+          );
+          return;
+        }
+        try {
+          faceDetector = new FaceDetector({
+            fastMode: true,
+            maxDetectedFaces: 1,
+          });
+        } catch (err) {
+          console.warn("FaceDetector init error:", err);
+          return;
+        }
+        lastFaceSeenAt = performance.now();
+        if (faceTimer) clearInterval(faceTimer);
+        faceTimer = setInterval(async () => {
+          if (!video || video.readyState < 2) return;
+          try {
+            const faces = await faceDetector.detect(video);
+            const now = performance.now();
+            if (faces && faces.length > 0) {
+              lastFaceSeenAt = now;
+            } else if (
+              now - lastFaceSeenAt > 2500 &&
+              now - lastThemeToggle > 2000
+            ) {
+              toggleTheme();
+              lastThemeToggle = now;
+              lastFaceSeenAt = now;
+            }
+          } catch (err) {
+            console.warn("Face detect error:", err);
+          }
+        }, 800);
+      }
+
       function processGestures(result) {
         if (result.landmarks && result.landmarks.length > 0) {
           STATE.hand.detected = true;
@@ -1286,12 +1328,6 @@
           const extensionRatio = avgTipDist / handSize;
           const pinchRatio = pinchDist / handSize;
           let modeChanged = false;
-          // Gesture: very open hand toggles theme (debounced)
-          const now = performance.now();
-          if (extensionRatio > 2.3 && now - lastThemeToggle > 1500) {
-            toggleTheme();
-            lastThemeToggle = now;
-          }
           if (extensionRatio < 1.5) {
             STATE.mode = "TREE";
             STATE.focusTarget = null;
