@@ -393,6 +393,20 @@
       >
         🌟 Christmas UI
       </div>
+      <div
+        id="ui-toggle"
+        class="control-btn"
+        style="
+          position: absolute;
+          bottom: 90px;
+          left: 18px;
+          z-index: 30;
+          pointer-events: auto;
+          padding: 8px 14px;
+        "
+      >
+        🙈 Hide UI
+      </div>
       <div id="footer-stats" class="ui-hidden">
         <div class="stats-title">WORLDWIDE HEARTS</div>
         <div class="map-container">
@@ -506,6 +520,9 @@
           ?.classList.toggle("ui-hidden", hide);
         document
           .getElementById("audio-toggle")
+          ?.classList.toggle("ui-hidden", hide);
+        document
+          .getElementById("ui-toggle")
           ?.classList.toggle("ui-hidden", hide);
       }
 
@@ -626,6 +643,11 @@
 
       document.getElementById("theme-toggle")?.addEventListener("click", () => {
         toggleTheme();
+      });
+
+      // Toggle UI visibility manually
+      document.getElementById("ui-toggle")?.addEventListener("click", () => {
+        document.getElementById("ui-layer")?.classList.toggle("ui-hidden");
       });
 
       function recordGesturePoint(tip, handSize) {
