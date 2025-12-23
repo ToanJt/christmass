@@ -27,11 +27,11 @@
         overflow: hidden;
         background: radial-gradient(
           circle at center,
-          #3d1a2e 0%,
-          #4a2a3a 50%,
-          #5c3a4a 100%
+          #0f2027 0%,
+          #203a43 50%,
+          #2c5364 100%
         );
-        background-color: #2a1620;
+        background-color: #050d1a;
         font-family: "Times New Roman", serif;
         touch-action: none;
         user-select: none;
@@ -397,8 +397,8 @@
 
       const CONFIG = {
         colors: {
-          bg: 0x2a1620,
-          fog: 0x2a1620,
+          bg: 0x050d1a,
+          fog: 0x050d1a,
           pink: 0xf092d8,
           darkPink: 0xd946a6,
           deepGreen: 0x03180a,
@@ -441,7 +441,42 @@
       let particleSystem = [],
         photoMeshGroup = new THREE.Group();
       let handLandmarker, video, caneTexture, snowSystem;
+      let goldMat, greenMat, redMat, candyMat, starMat;
+      let innerLight, spotGold, spotBlue, fillLight, star;
       let bloomPass;
+      const THEMES = {
+        XMAS: {
+          bg: 0x050d1a,
+          fog: 0x050d1a,
+          bodyBg:
+            "radial-gradient(circle at center, #0f2027 0%, #203a43 50%, #2c5364 100%)",
+          bodyBgSolid: "#050d1a",
+          accent: 0xf092d8,
+          accent2: 0xd4af37,
+          deepGreen: 0x03180a,
+          snow: 0xf092d8,
+          inner: 0xf092d8,
+          spot1: 0xf092d8,
+          spot2: 0xd4a5ff,
+          fill: 0xf5c2e8,
+        },
+        PINK: {
+          bg: 0x2a1620,
+          fog: 0x2a1620,
+          bodyBg:
+            "radial-gradient(circle at center, #3d1a2e 0%, #4a2a3a 50%, #5c3a4a 100%)",
+          bodyBgSolid: "#2a1620",
+          accent: 0xf092d8,
+          accent2: 0xf092d8,
+          deepGreen: 0x03180a,
+          snow: 0xf092d8,
+          inner: 0xf092d8,
+          spot1: 0xf092d8,
+          spot2: 0xd4a5ff,
+          fill: 0xf5c2e8,
+        },
+      };
+      let CURRENT_THEME = "XMAS";
       let raycaster = new THREE.Raycaster(),
         mouse = new THREE.Vector2();
       let isCameraRunning = false;
@@ -463,6 +498,32 @@
         document
           .getElementById("audio-toggle")
           ?.classList.toggle("ui-hidden", hide);
+      }
+
+      function applyThemeVisuals(name) {
+        const theme = THEMES[name];
+        CURRENT_THEME = name;
+        // Update background
+        document.body.style.background = theme.bodyBg;
+        document.body.style.backgroundColor = theme.bodyBgSolid;
+        // Update scene fog/bg
+        if (scene) {
+          scene.background = new THREE.Color(theme.bg);
+          scene.fog = new THREE.FogExp2(theme.fog, 0.015);
+        }
+        // Update lights
+        if (innerLight) innerLight.color.setHex(theme.inner);
+        if (spotGold) spotGold.color.setHex(theme.spot1);
+        if (spotBlue) spotBlue.color.setHex(theme.spot2);
+        if (fillLight) fillLight.color.setHex(theme.fill);
+        // Update materials
+        goldMat?.color.setHex(theme.accent);
+        greenMat?.color.setHex(theme.deepGreen);
+        redMat?.color.setHex(theme.darkPink ?? theme.accent);
+        candyMat?.color?.setHex?.(theme.accent);
+        starMat?.color.setHex(theme.accent);
+        starMat?.emissive.setHex(theme.accent);
+        if (snowSystem?.material) snowSystem.material.color.setHex(theme.snow);
       }
 
       window.setMode = (mode) => {
@@ -491,6 +552,7 @@
         setupEvents();
         setupTouchAndClick();
         applyModeUIVisibility();
+        applyThemeVisuals(CURRENT_THEME);
         document.getElementById("loader").style.opacity = 0;
         setTimeout(() => document.getElementById("loader").remove(), 800);
         animate();
@@ -530,20 +592,20 @@
 
       function setupLights() {
         scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const innerLight = new THREE.PointLight(0xf092d8, 2, 20);
+        innerLight = new THREE.PointLight(THEMES[CURRENT_THEME].inner, 2, 20);
         innerLight.position.set(0, 5, 0);
         mainGroup.add(innerLight);
-        const spotGold = new THREE.SpotLight(0xf092d8, 1200);
+        spotGold = new THREE.SpotLight(THEMES[CURRENT_THEME].spot1, 1200);
         spotGold.position.set(30, 40, 40);
         spotGold.angle = 0.5;
         spotGold.penumbra = 0.5;
         scene.add(spotGold);
-        const spotBlue = new THREE.SpotLight(0xd4a5ff, 800);
+        spotBlue = new THREE.SpotLight(THEMES[CURRENT_THEME].spot2, 800);
         spotBlue.position.set(-30, 20, -30);
         scene.add(spotBlue);
-        const fill = new THREE.DirectionalLight(0xf5c2e8, 0.8);
-        fill.position.set(0, 0, 50);
-        scene.add(fill);
+        fillLight = new THREE.DirectionalLight(THEMES[CURRENT_THEME].fill, 0.8);
+        fillLight.position.set(0, 0, 50);
+        scene.add(fillLight);
       }
 
       function setupPostProcessing() {
@@ -805,29 +867,29 @@
       function createParticles() {
         const sphereGeo = new THREE.SphereGeometry(0.5, 32, 32);
         const boxGeo = new THREE.BoxGeometry(0.55, 0.55, 0.55);
-        const goldMat = new THREE.MeshStandardMaterial({
-          color: 0xf092d8,
+        goldMat = new THREE.MeshStandardMaterial({
+          color: THEMES[CURRENT_THEME].accent,
           metalness: 1.0,
           roughness: 0.1,
           envMapIntensity: 2.0,
           emissive: 0x8b4c6e,
           emissiveIntensity: 0.3,
         });
-        const greenMat = new THREE.MeshStandardMaterial({
-          color: CONFIG.colors.deepGreen,
+        greenMat = new THREE.MeshStandardMaterial({
+          color: THEMES[CURRENT_THEME].deepGreen,
           metalness: 0.2,
           roughness: 0.8,
           emissive: 0x002200,
           emissiveIntensity: 0.2,
         });
-        const redMat = new THREE.MeshPhysicalMaterial({
+        redMat = new THREE.MeshPhysicalMaterial({
           color: 0xd946a6,
           metalness: 0.3,
           roughness: 0.2,
           clearcoat: 1.0,
           emissive: 0x660033,
         });
-        const candyMat = new THREE.MeshStandardMaterial({
+        candyMat = new THREE.MeshStandardMaterial({
           map: caneTexture,
           roughness: 0.4,
         });
@@ -886,14 +948,14 @@
           bevelSegments: 2,
         });
         starGeo.center();
-        const starMat = new THREE.MeshStandardMaterial({
-          color: 0xf092d8,
-          emissive: 0xf092d8,
+        starMat = new THREE.MeshStandardMaterial({
+          color: THEMES[CURRENT_THEME].accent,
+          emissive: THEMES[CURRENT_THEME].accent,
           emissiveIntensity: 1.0,
           metalness: 1.0,
           roughness: 0,
         });
-        const star = new THREE.Mesh(starGeo, starMat);
+        star = new THREE.Mesh(starGeo, starMat);
         star.position.set(0, CONFIG.particles.treeHeight / 2 + 1.2, 0);
         mainGroup.add(star);
         mainGroup.add(photoMeshGroup);
@@ -1133,6 +1195,24 @@
           const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
           const extensionRatio = avgTipDist / handSize;
           const pinchRatio = pinchDist / handSize;
+          // Detect 3+ raised fingers to trigger theme switch to PINK
+          let extendedCount = 0;
+          const fingerIndices = [
+            { tip: 8, base: 5 },
+            { tip: 12, base: 9 },
+            { tip: 16, base: 13 },
+            { tip: 20, base: 17 },
+          ];
+          fingerIndices.forEach((idx) => {
+            const tip = lm[idx.tip];
+            const base = lm[idx.base];
+            const dist = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+            const baseDist = Math.hypot(base.x - wrist.x, base.y - wrist.y);
+            if (dist > baseDist * 1.05) extendedCount++;
+          });
+          if (extendedCount >= 3 && CURRENT_THEME !== "PINK") {
+            applyThemeVisuals("PINK");
+          }
           let modeChanged = false;
           if (extensionRatio < 1.5) {
             STATE.mode = "TREE";
