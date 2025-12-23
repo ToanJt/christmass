@@ -44,6 +44,15 @@
         user-select: none;
         -webkit-user-select: none;
       }
+      body.theme-pink {
+        background: radial-gradient(
+          circle at center,
+          #3d1a2e 0%,
+          #4a2a3a 50%,
+          #5c3a4a 100%
+        );
+        background-color: #2a1620;
+      }
       #canvas-container {
         width: 100vw;
         height: 100vh;
@@ -197,6 +206,20 @@
         color: #000;
         box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
       }
+      body.theme-pink .control-btn {
+        border-color: rgba(240, 146, 216, 0.4);
+        color: #f092d8;
+      }
+      body.theme-pink .control-btn.active {
+        background: rgba(240, 146, 216, 0.8);
+        color: #fff;
+        box-shadow: 0 0 15px rgba(240, 146, 216, 0.6);
+      }
+      body.theme-pink .control-btn:hover {
+        background: #f092d8;
+        color: #fff;
+        box-shadow: 0 0 20px rgba(240, 146, 216, 0.5);
+      }
 
       .hint-text {
         color: rgba(212, 175, 55, 0.5);
@@ -237,6 +260,10 @@
         cursor: pointer;
         transition: all 0.3s;
         backdrop-filter: blur(4px);
+      }
+      body.theme-pink .mode-btn {
+        border-color: #f092d8;
+        color: #f092d8;
       }
       .mode-btn:active {
         transform: scale(0.9);
@@ -407,6 +434,7 @@
       <div class="spinner"></div>
       <div class="loader-text">Loading Memories</div>
     </div>
+    <div id="theme-fade"></div>
 
     <div id="msg-box"></div>
 
@@ -592,9 +620,12 @@
       let lastHandTs = 0;
       let lastSwipeTs = 0;
       let innerLight, starMesh;
+      let tipHistory = [];
+      let lastThemeToggleTs = 0;
 
       const debugInfo = document.getElementById("debug-info");
       const camBtn = document.getElementById("cam-btn");
+      const themeFadeEl = document.getElementById("theme-fade");
       let isCameraRunning = false;
 
       function applyModeUIVisibility() {
@@ -1164,6 +1195,51 @@
             if (mat.emissive) mat.emissive.setHex(t.red);
           }
         });
+        document.body.classList.toggle("theme-pink", themeName === "pink");
+      }
+
+      function startThemeTransition(themeName) {
+        if (!THEMES[themeName]) return;
+        if (themeFadeEl) {
+          themeFadeEl.style.transition = "opacity 0.6s ease";
+          themeFadeEl.style.opacity = "1";
+          setTimeout(() => {
+            applyThemeColors(themeName);
+            setTimeout(() => {
+              themeFadeEl.style.opacity = "0";
+            }, 60);
+          }, 220);
+        } else {
+          applyThemeColors(themeName);
+        }
+      }
+
+      function toggleTheme() {
+        const next = currentTheme === "pink" ? "classic" : "pink";
+        startThemeTransition(next);
+      }
+
+      function recordCircleGesture(angle, radius) {
+        const now = performance.now();
+        tipHistory.push({ angle, radius, t: now });
+        // keep last 1.2s
+        tipHistory = tipHistory.filter((p) => now - p.t < 1200);
+        if (tipHistory.length < 6) return;
+        const angles = tipHistory.map((p) => p.angle);
+        let minA = Infinity,
+          maxA = -Infinity;
+        angles.forEach((a) => {
+          if (a < minA) minA = a;
+          if (a > maxA) maxA = a;
+        });
+        const sweep = maxA - minA;
+        const avgR =
+          tipHistory.reduce((s, p) => s + p.radius, 0) / tipHistory.length;
+        if (sweep > 5.0 && avgR > 0.12 && now - lastThemeToggleTs > 1500) {
+          lastThemeToggleTs = now;
+          tipHistory = [];
+          toggleTheme();
+        }
       }
 
       function addPhotoToScene(texture) {
@@ -1350,7 +1426,7 @@
             const dx = STATE.hand.x - lastHandX;
             if (dt < 250 && dx > 0.6 && now - lastSwipeTs > 1200) {
               lastSwipeTs = now;
-              setTheme("pink");
+              startThemeTransition("pink");
             }
           }
           lastHandX = STATE.hand.x;
@@ -1364,6 +1440,15 @@
           const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
           const extensionRatio = avgTipDist / handSize;
           const pinchRatio = pinchDist / handSize;
+          // Circle gesture: open hand and circular motion toggles theme
+          const tip = lm[8];
+          const tipX = (tip.x - 0.5) * 2;
+          const tipY = (tip.y - 0.5) * 2;
+          const tipR = Math.hypot(tipX, tipY);
+          const tipAngle = Math.atan2(tipY, tipX);
+          if (extensionRatio > 1.6 && pinchRatio > 0.5) {
+            recordCircleGesture(tipAngle, tipR);
+          }
           debugInfo.innerText = `Gesture Detected: ${STATE.mode}`;
           let modeChanged = false;
           if (extensionRatio < 1.5) {
@@ -1405,9 +1490,6 @@
           .addEventListener("change", handleImageUpload);
         camBtn.addEventListener("click", () => {
           initMediaPipe();
-        });
-        document.getElementById("switch-pink").addEventListener("click", () => {
-          applyThemeColors("pink");
         });
         window.addEventListener("keydown", (e) => {
           const key = e.key.toLowerCase();
